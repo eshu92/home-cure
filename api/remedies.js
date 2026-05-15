@@ -1,10 +1,8 @@
-export default async function handler(req, res) {
-  // Only allow POST requests
+module.exports = async function handler(req, res) {
   if (req.method !== "POST") {
     return res.status(405).json({ error: "Method not allowed" });
   }
 
-  // Make sure the API key is set
   if (!process.env.ANTHROPIC_API_KEY) {
     return res.status(500).json({ error: "API key not configured" });
   }
@@ -26,4 +24,4 @@ export default async function handler(req, res) {
     console.error("Anthropic API error:", err);
     return res.status(500).json({ error: "Failed to reach Anthropic API" });
   }
-}
+};
