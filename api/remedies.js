@@ -1,13 +1,15 @@
 module.exports = async function handler(req, res) {
-  if (req.method !== "POST") {
-    return res.status(405).json({ error: "Method not allowed" });
-  }
+  res.setHeader("Access-Control-Allow-Origin", "*");
+  res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type");
 
-  if (!process.env.ANTHROPIC_API_KEY) {
-    return res.status(500).json({ error: "API key not configured" });
-  }
+  if (req.method === "OPTIONS") return res.status(200).end();
+  if (req.method !== "POST") return res.status(405).json({ error: "Method not allowed" });
+  if (!process.env.ANTHROPIC_API_KEY) return res.status(500).json({ error: "Missing API key" });
 
   try {
+    const body = typeof req.body === "string" ? JSON.parse(req.body) : req.body;
+
     const response = await fetch("https://api.anthropic.com/v1/messages", {
       method: "POST",
       headers: {
@@ -15,13 +17,13 @@ module.exports = async function handler(req, res) {
         "x-api-key": process.env.ANTHROPIC_API_KEY,
         "anthropic-version": "2023-06-01",
       },
-      body: JSON.stringify(req.body),
+      body: JSON.stringify(body),
     });
 
     const data = await response.json();
     return res.status(response.status).json(data);
   } catch (err) {
-    console.error("Anthropic API error:", err);
-    return res.status(500).json({ error: "Failed to reach Anthropic API" });
+    console.error("Error:", err.message);
+    return res.status(500).json({ error: err.message });
   }
 };
